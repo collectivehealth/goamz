@@ -116,6 +116,10 @@ type SendMessageResponse struct {
 	ResponseMetadata       ResponseMetadata
 }
 
+type SetQueueAttributesResponse struct {
+	ResponseMetadata ResponseMetadata
+}
+
 type ReceiveMessageResponse struct {
 	Messages         []Message `xml:"ReceiveMessageResult>Message"`
 	ResponseMetadata ResponseMetadata
@@ -238,6 +242,24 @@ func (s *SQS) getQueueUrl(queueName string) (resp *GetQueueUrlResponse, err erro
 func (s *SQS) newQueue(queueName string, attrs map[string]string) (resp *CreateQueueResponse, err error) {
 	resp = &CreateQueueResponse{}
 	params := makeParams("CreateQueue")
+	params["QueueName"] = queueName
+
+	i := 1
+	for k, v := range attrs {
+		nameParam := fmt.Sprintf("Attribute.%d.Name", i)
+		valParam := fmt.Sprintf("Attribute.%d.Value", i)
+		params[nameParam] = k
+		params[valParam] = v
+		i++
+	}
+
+	err = s.query("", params, resp)
+	return
+}
+
+func (s *SQS) SetQueueAttributes(queueName string, attrs map[string]string) (resp *SetQueueAttributesResponse, err error) {
+	resp = &SetQueueAttributesResponse{}
+	params := makeParams("SetQueueAttributes")
 	params["QueueName"] = queueName
 
 	i := 1
